@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{15FBFE92-72EF-478E-A305-99B38F970B51}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>PanelDueSplashMaker</RootNamespace>
+    <AssemblyName>PanelDueSplashMaker</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ExecutableFiles.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ExecutableFiles.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ImageProcessing\ColorCaches\BaseColorCache.cs" />
+    <Compile Include="ImageProcessing\ColorCaches\Common\ColorModel.cs" />
+    <Compile Include="ImageProcessing\ColorCaches\EuclideanDistance\EuclideanDistanceColorCache.cs" />
+    <Compile Include="ImageProcessing\ColorCaches\IColorCache.cs" />
+    <Compile Include="ImageProcessing\ColorCaches\LocalitySensitiveHash\LshBucketInfo.cs" />
+    <Compile Include="ImageProcessing\ColorCaches\LocalitySensitiveHash\LshColorCache.cs" />
+    <Compile Include="ImageProcessing\ColorCaches\Octree\OctreeCacheNode.cs" />
+    <Compile Include="ImageProcessing\ColorCaches\Octree\OctreeColorCache.cs" />
+    <Compile Include="ImageProcessing\Ditherers\BaseColorDitherer.cs" />
+    <Compile Include="ImageProcessing\Ditherers\ErrorDiffusion\AtkinsonDithering.cs" />
+    <Compile Include="ImageProcessing\Ditherers\ErrorDiffusion\BaseErrorDiffusionDitherer.cs" />
+    <Compile Include="ImageProcessing\Ditherers\ErrorDiffusion\BurkesDitherer.cs" />
+    <Compile Include="ImageProcessing\Ditherers\ErrorDiffusion\FanDitherer.cs" />
+    <Compile Include="ImageProcessing\Ditherers\ErrorDiffusion\FilterLiteSierra.cs" />
+    <Compile Include="ImageProcessing\Ditherers\ErrorDiffusion\FloydSteinbergDitherer.cs" />
+    <Compile Include="ImageProcessing\Ditherers\ErrorDiffusion\JarvisJudiceNinkeDitherer.cs" />
+    <Compile Include="ImageProcessing\Ditherers\ErrorDiffusion\ShiauDitherer.cs" />
+    <Compile Include="ImageProcessing\Ditherers\ErrorDiffusion\SierraDitherer.cs" />
+    <Compile Include="ImageProcessing\Ditherers\ErrorDiffusion\StuckiDitherer.cs" />
+    <Compile Include="ImageProcessing\Ditherers\ErrorDiffusion\TwoRowSierraDitherer.cs" />
+    <Compile Include="ImageProcessing\Ditherers\IColorDitherer.cs" />
+    <Compile Include="ImageProcessing\Ditherers\Ordered\BaseOrderedDitherer.cs" />
+    <Compile Include="ImageProcessing\Ditherers\Ordered\BayerDitherer4.cs" />
+    <Compile Include="ImageProcessing\Ditherers\Ordered\BayerDitherer8.cs" />
+    <Compile Include="ImageProcessing\Ditherers\Ordered\ClusteredDotDitherer.cs" />
+    <Compile Include="ImageProcessing\Ditherers\Ordered\DotHalfToneDitherer.cs" />
+    <Compile Include="ImageProcessing\Extensions\Extend.IEnumerable.cs" />
+    <Compile Include="ImageProcessing\Extensions\Extend.Image.cs" />
+    <Compile Include="ImageProcessing\Extensions\Extend.PixelFormat.cs" />
+    <Compile Include="ImageProcessing\Helpers\ColorModelHelper.cs" />
+    <Compile Include="ImageProcessing\Helpers\FastRandom.cs" />
+    <Compile Include="ImageProcessing\Helpers\Guard.cs" />
+    <Compile Include="ImageProcessing\Helpers\ImageBuffer.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixel.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixels\IIndexedPixel.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixels\Indexed\PixelData1Indexed.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixels\Indexed\PixelData4Indexed.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixels\Indexed\PixelData8Indexed.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixels\INonIndexedPixel.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixels\NonIndexed\PixelDataArgb1555.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixels\NonIndexed\PixelDataArgb64.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixels\NonIndexed\PixelDataArgb8888.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixels\NonIndexed\PixelDataGray16.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixels\NonIndexed\PixelDataRgb48.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixels\NonIndexed\PixelDataRgb555.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixels\NonIndexed\PixelDataRgb565.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixels\NonIndexed\PixelDataRgb888.cs" />
+    <Compile Include="ImageProcessing\Helpers\Pixels\NonIndexed\PixelDataRgb8888.cs" />
+    <Compile Include="ImageProcessing\Helpers\PixelTransform.cs" />
+    <Compile Include="ImageProcessing\Helpers\QuantizationHelper.cs" />
+    <Compile Include="ImageProcessing\PathProviders\IPathProvider.cs" />
+    <Compile Include="ImageProcessing\PathProviders\ReversedPathProvider.cs" />
+    <Compile Include="ImageProcessing\PathProviders\SerpentinePathProvider.cs" />
+    <Compile Include="ImageProcessing\PathProviders\StandardPathProvider.cs" />
+    <Compile Include="ImageProcessing\Quantizers\BaseColorCacheQuantizer.cs" />
+    <Compile Include="ImageProcessing\Quantizers\BaseColorQuantizer.cs" />
+    <Compile Include="ImageProcessing\Quantizers\DistinctSelection\DistinctBucket.cs" />
+    <Compile Include="ImageProcessing\Quantizers\DistinctSelection\DistinctColorInfo.cs" />
+    <Compile Include="ImageProcessing\Quantizers\DistinctSelection\DistinctSelectionQuantizer.cs" />
+    <Compile Include="ImageProcessing\Quantizers\IColorQuantizer.cs" />
+    <Compile Include="ImageProcessing\Quantizers\MedianCut\MedianCutCube.cs" />
+    <Compile Include="ImageProcessing\Quantizers\MedianCut\MedianCutQuantizer.cs" />
+    <Compile Include="ImageProcessing\Quantizers\NeuQuant\NeuralColorQuantizer.cs" />
+    <Compile Include="ImageProcessing\Quantizers\Octree\OctreeNode.cs" />
+    <Compile Include="ImageProcessing\Quantizers\Octree\OctreeQuantizer.cs" />
+    <Compile Include="ImageProcessing\Quantizers\OptimalPalette\OptimalPaletteQuantizer.cs" />
+    <Compile Include="ImageProcessing\Quantizers\Popularity\PopularityColorSlot.cs" />
+    <Compile Include="ImageProcessing\Quantizers\Popularity\PopularityQuantizer.cs" />
+    <Compile Include="ImageProcessing\Quantizers\Uniform\UniformColorSlot.cs" />
+    <Compile Include="ImageProcessing\Quantizers\Uniform\UniformQuantizer.cs" />
+    <Compile Include="ImageProcessing\Quantizers\XiaolinWu\WuColorCube.cs" />
+    <Compile Include="ImageProcessing\Quantizers\XiaolinWu\WuColorQuantizer.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="ExecutableFiles.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ExecutableFiles.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bmp2c-escher3d.exe" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bossac.exe" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
