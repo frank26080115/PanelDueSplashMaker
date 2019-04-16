@@ -8,6 +8,7 @@ It automatically
  * converts the colour depth down to 8 bits
  * performs the conversion usig bmp2c-escher3d.exe
  * finds the appropriate COM port to open (searches by VID and PID, also searches for description matching BOSSA)
+ * automatically retrieves a list of available PanelDue firmware AND downloads it for you
  * runs BOSSA from the command line with correct arguments
 
 You can't screw up using this!

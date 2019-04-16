@@ -4,10 +4,15 @@ using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Web;
+using System.Net;
+using System.Net.Http;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SimplePaletteQuantizer.Helpers;
@@ -26,6 +31,7 @@ namespace PanelDueSplashMaker
         List<IColorDitherer> dithererList;
         string comPort = "";
         Process proc = null;
+        Dictionary<string, string> webFirmwareList = new Dictionary<string, string>();
 
         private string TemporaryBitmapPath
         {
@@ -48,10 +54,19 @@ namespace PanelDueSplashMaker
                 return Program.GetTempFolder() + Path.DirectorySeparatorChar + "tempfw.bin";
             }
         }
+        private string TemporaryDownloadPath
+        {
+            get
+            {
+                return Program.GetTempFolder() + Path.DirectorySeparatorChar + "tempdl.bin";
+            }
+        }
 
         public Form1()
         {
             InitializeComponent();
+
+            this.bkgndFirmwareListReader.RunWorkerAsync();
 
             this.dropDithering.SelectedIndex = 0;
             dithererList = new List<IColorDitherer>
@@ -171,6 +186,10 @@ namespace PanelDueSplashMaker
                 proc.WaitForExit(60000);
                 FileInfo nfo = new FileInfo(this.TemporaryLogoPath);
                 lblImageFileSize.Text = string.Format("Splash File Size: {0} bytes", nfo.Length);
+                if (nfo.Length > (64000 * 3))
+                {
+                    lblImageFileSize.Text += "!!!";
+                }
             }
             catch
             {
@@ -199,7 +218,7 @@ namespace PanelDueSplashMaker
             System.Diagnostics.Process.Start("https://github.com/dc42/PanelDueFirmware/releases");
         }
 
-        private bool Precheck()
+        private bool Precheck(bool mustUseFile)
         {
             if (resultImage == null)
             {
@@ -211,17 +230,20 @@ namespace PanelDueSplashMaker
                 MessageBox.Show("No resulting image file was created. Please try processing an image.", "Error");
                 return false;
             }
-            try
+            if (mustUseFile)
             {
-                if (File.Exists(txtFirmwareBinaryPath.Text) == false)
+                try
                 {
-                    throw new Exception();
+                    if (File.Exists(txtFirmwareBinaryPath.Text) == false)
+                    {
+                        throw new Exception();
+                    }
                 }
-            }
-            catch
-            {
-                MessageBox.Show("No firmware binary file was found. Please select a firmware binary file (the nologo version).", "Error");
-                return false;
+                catch
+                {
+                    MessageBox.Show("No firmware binary file was found. Please select a firmware binary file (the nologo version).", "Error");
+                    return false;
+                }
             }
             if (File.Exists(Program.bmp2cPath) == false)
             {
@@ -243,6 +265,71 @@ namespace PanelDueSplashMaker
 
             txtFinalFirmwarePath.Text = sfd.FileName;
 
+            if (MakeFinalBinary(txtFirmwareBinaryPath.Text) == false)
+            {
+                return false;
+            }
+
+            File.Copy(this.TemporaryFirmwarePath, sfd.FileName, true);
+
+            return true;
+        }
+
+        private bool RunBossac(string path)
+        {
+            Stopwatch sw = Stopwatch.StartNew();
+            ProcessStartInfo psi = new ProcessStartInfo(Program.bossacPath, string.Format("-p{0} -e -w -v --boot=1 --bod=0 --bor=0 \"{1}\"", comPort, path));
+            proc = new Process();
+            proc.StartInfo = psi;
+            proc.Start();
+            proc.WaitForExit();
+            sw.Stop();
+            if (sw.ElapsedMilliseconds < 3000)
+            {
+                MessageBox.Show("Something went wrong while flashing", "Error");
+                return false;
+            }
+            return true;
+        }
+
+        private bool GetComPort()
+        {
+            if (string.IsNullOrWhiteSpace(comPort))
+            {
+                var list = Program.ComPortNames();
+                if (list.Count <= 0)
+                {
+                    ComPortPicker cpp = new ComPortPicker();
+                    cpp.ShowDialog();
+                    if (cpp.IsConfirmed)
+                    {
+                        comPort = cpp.ComPort;
+                        if (string.IsNullOrWhiteSpace(comPort) == false)
+                        {
+                            lblSerialPort.Text = comPort;
+                        }
+                        else
+                        {
+                            MessageBox.Show("No COM port selected", "Error");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    comPort = list[0];
+                    lblSerialPort.Text = comPort;
+                }
+            }
+            return true;
+        }
+
+        private bool MakeFinalBinary(string srcPath)
+        {
             ProcessStartInfo psi = new ProcessStartInfo(Program.bmp2cPath, string.Format("\"{0}\" \"{1}\" -b -c", this.TemporaryBitmapPath, this.TemporaryLogoPath));
             proc = new Process();
             proc.StartInfo = psi;
@@ -250,7 +337,7 @@ namespace PanelDueSplashMaker
             proc.WaitForExit(60000);
 
             List<byte> allData = new List<byte>();
-            allData.AddRange(File.ReadAllBytes(txtFirmwareBinaryPath.Text));
+            allData.AddRange(File.ReadAllBytes(srcPath));
             allData.AddRange(File.ReadAllBytes(this.TemporaryLogoPath));
 
             if (allData.Count >= 256000)
@@ -265,14 +352,12 @@ namespace PanelDueSplashMaker
             }
             File.WriteAllBytes(this.TemporaryFirmwarePath, allData.ToArray());
 
-            File.Copy(this.TemporaryFirmwarePath, sfd.FileName, true);
-
             return true;
         }
 
         private void btnSaveResultingFirmware_Click(object sender, EventArgs e)
         {
-            if (Precheck() == false)
+            if (Precheck(true) == false)
             {
                 return;
             }
@@ -304,7 +389,7 @@ namespace PanelDueSplashMaker
             }
             catch
             {
-                if (Precheck() == false)
+                if (Precheck(true) == false)
                 {
                     return;
                 }
@@ -345,29 +430,12 @@ namespace PanelDueSplashMaker
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(comPort))
+            if (GetComPort() == false)
             {
-                var list = Program.ComPortNames();
-                if (list.Count <= 0)
-                {
-                    MessageBox.Show("COM port not found. Have you connected to the PanelDue, and reset it while holding the ERASE button?", "Error");
-                    return;
-                }
-                comPort = list[0];
-                lblSerialPort.Text = comPort;
-            }
-
-            if (string.IsNullOrWhiteSpace(comPort))
-            {
-                MessageBox.Show("No COM ports are found!", "Error");
                 return;
             }
 
-            ProcessStartInfo psi = new ProcessStartInfo(Program.bossacPath, string.Format("-p{0} -e -w -v --boot=1 --bod=0 --bor=0 \"{1}\"", comPort, txtFinalFirmwarePath.Text, this.TemporaryLogoPath));
-            proc = new Process();
-            proc.StartInfo = psi;
-            proc.Start();
-            proc.WaitForExit();
+            RunBossac(txtFinalFirmwarePath.Text);
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -381,6 +449,154 @@ namespace PanelDueSplashMaker
             else
             {
                 lblSerialPort.Text = "None";
+            }
+        }
+
+        private void btnFlashMeFromWeb_Click(object sender, EventArgs e)
+        {
+            if (Precheck(false) == false)
+            {
+                return;
+            }
+            if (File.Exists(Program.bossacPath) == false)
+            {
+                MessageBox.Show("Internal error, BOSSAC is missing.", "Error");
+                return;
+            }
+            
+            try
+            {
+                if (File.Exists(this.TemporaryDownloadPath))
+                {
+                    File.Delete(this.TemporaryDownloadPath);
+                    Thread.Sleep(500);
+                }
+            }
+            catch
+            {
+                MessageBox.Show("Internal error: unable to create temporary file for download", "Error");
+                return;
+            }
+
+            try
+            {
+                string drop = dropWebVersion.SelectedItem.ToString();
+                string url = "";
+                if (webFirmwareList.ContainsKey(drop))
+                {
+                    url = webFirmwareList[drop];
+                }
+                else
+                {
+                    MessageBox.Show("Internal error: unable to find URL for dropdown item", "Error");
+                    return;
+                }
+                using (WebClient client = new WebClient())
+                {
+                    client.DownloadFile(url, this.TemporaryDownloadPath);
+                }
+            }
+            catch
+            {
+                MessageBox.Show("Internal error: unable to download binary firmware", "Error");
+                return;
+            }
+
+            if (File.Exists(this.TemporaryDownloadPath) == false)
+            {
+                MessageBox.Show("Internal error: failed to download binary firmware", "Error");
+                return;
+            }
+
+            if (MakeFinalBinary(this.TemporaryDownloadPath) == false)
+            {
+                return;
+            }
+
+            if (GetComPort() == false)
+            {
+                return;
+            }
+
+            RunBossac(this.TemporaryDownloadPath);
+        }
+
+        private void bkgndFirmwareListReader_DoWork(object sender, DoWorkEventArgs e)
+        {
+            string html = "";
+            try
+            {
+                using (WebClient client = new WebClient())
+                {
+                    html = client.DownloadString("https://github.com/dc42/PanelDueFirmware/releases");
+                }
+            }
+            catch
+            {
+                return;
+            }
+
+            string re1 = "(<)"; // Any Single Character 1
+            string re2 = "(a)"; // Any Single Character 2
+            string re3 = "(\\s+)";  // White Space 1
+            string re4 = "(href)";  // Variable Name 1
+            string re5 = "(=)"; // Any Single Character 3
+            string re6 = "(\")";    // Any Single Character 4
+            string re7 = "(\\/)";   // Any Single Character 5
+            string re8 = "(dc42)";  // Variable Name 2
+            string re9 = "(\\/)";   // Any Single Character 6
+            string re10 = "(PanelDueFirmware)"; // Variable Name 3
+            string re11 = "(\\/)";  // Any Single Character 7
+            string re12 = "(releases)"; // Variable Name 4
+            string re13 = "(\\/)";  // Any Single Character 8
+            string re14 = "(download)"; // Variable Name 5
+            string re15 = "(\\/)";  // Any Single Character 9
+            string re16 = "([0-9.]+)";    // Non-greedy match on filler
+            string re17 = "(\\/)";  // Any Single Character 10
+            string re18 = "(PanelDue-)"; // Variable Name 6
+            string re20 = "([0-9vi.-]+)";    // Non-greedy match on filler
+            string re24 = "(-nologo\\.bin)"; // File Name 1
+            string re25 = "(\")";	// Any Single Character 13
+
+            string rt = re1 + re2 + re3 + re4 + re5 + re6 + re7 + re8 + re9 + re10 + re11 + re12 + re13 + re14 + re15 + re16 + re17 + re18 + re20 + re24 + re25;
+
+            Regex r = new Regex(rt, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            Match m = r.Match(html);
+            while (m.Success)
+            {
+                string fw = m.Groups[16].ToString();
+                string hw = m.Groups[19].ToString();
+
+                if (fw.Contains("/") == false && hw.Contains(".bin") == false)
+                {
+                    string url = string.Format("https://github.com/dc42/PanelDueFirmware/releases/download/{0}/PanelDue-{1}-nologo.bin", fw, hw);
+                    string name = string.Format("FW v{0} - HW {1}", fw, hw);
+
+                    if (webFirmwareList.ContainsKey(name) == false)
+                    {
+                        webFirmwareList.Add(name, url);
+                    }
+                }
+
+                m = m.NextMatch();
+            }
+        }
+
+        private void bkgndFirmwareListReader_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (webFirmwareList.Count <= 0)
+            {
+                btnFlashMeFromWeb.Enabled = false;
+                dropWebVersion.Items.Clear();
+                dropWebVersion.Items.Add("Failed to retrieve list from web");
+                dropWebVersion.SelectedIndex = 0;
+                dropWebVersion.Enabled = false;
+            }
+            else
+            {
+                btnFlashMeFromWeb.Enabled = true;
+                dropWebVersion.Items.AddRange(webFirmwareList.Keys.ToArray());
+                dropWebVersion.SelectedIndex = 0;
             }
         }
     }

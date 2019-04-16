@@ -124,7 +124,11 @@ namespace PanelDueSplashMaker
                 {
                     if (i.ToLowerInvariant().Contains("bossa"))
                     {
-                        string n = i.Substring(0, i.IndexOf(' '));
+                        string n = i;
+                        if (n.Contains(' '))
+                        {
+                            n = i.Substring(0, i.IndexOf(' '));
+                        }
                         if (comports.Contains(n) == false)
                         {
                             comports.Add(n);
