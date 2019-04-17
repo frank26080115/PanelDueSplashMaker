@@ -20,6 +20,14 @@ namespace PanelDueSplashMaker
             private set;
         }
 
+        public bool IsEmpty
+        {
+            get
+            {
+                return dropComPorts.Items.Count <= 0;
+            }
+        }
+
         public string ComPort
         {
             get
@@ -143,6 +151,20 @@ namespace PanelDueSplashMaker
                     IsConfirmed = true;
                     this.Close();
                 }
+            }
+        }
+
+        private void ComPortPicker_Load(object sender, EventArgs e)
+        {
+            if (dropComPorts.Items.Count == 1)
+            {
+                this.IsConfirmed = true;
+                this.Close();
+            }
+            else if (dropComPorts.Items.Count == 0)
+            {
+                this.IsConfirmed = false;
+                this.Close();
             }
         }
     }

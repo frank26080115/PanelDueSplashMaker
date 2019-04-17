@@ -86,7 +86,9 @@
             this.Name = "ComPortPicker";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Please Select a COM Port";
+            this.Load += new System.EventHandler(this.ComPortPicker_Load);
             this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ComPortPicker_KeyPress);
             this.ResumeLayout(false);
 

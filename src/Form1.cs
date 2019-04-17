@@ -180,6 +180,7 @@ namespace PanelDueSplashMaker
                 psi.CreateNoWindow = true;
                 psi.UseShellExecute = false;
                 psi.WindowStyle = ProcessWindowStyle.Hidden;
+                TryCloseProc();
                 proc = new Process();
                 proc.StartInfo = psi;
                 proc.Start();
@@ -194,6 +195,21 @@ namespace PanelDueSplashMaker
             catch
             {
                 lblImageFileSize.Text = "";
+            }
+        }
+
+        private void TryCloseProc()
+        {
+            try
+            {
+                if (proc != null)
+                {
+                    proc.Kill();
+                }
+            }
+            catch (Exception ex)
+            {
+
             }
         }
 
@@ -277,18 +293,41 @@ namespace PanelDueSplashMaker
 
         private bool RunBossac(string path)
         {
+            TryCloseProc();
             Stopwatch sw = Stopwatch.StartNew();
-            ProcessStartInfo psi = new ProcessStartInfo(Program.bossacPath, string.Format("-p{0} -e -w -v --boot=1 --bod=0 --bor=0 \"{1}\"", comPort, path));
-            proc = new Process();
-            proc.StartInfo = psi;
-            proc.Start();
-            proc.WaitForExit();
-            sw.Stop();
-            if (sw.ElapsedMilliseconds < 3000)
+            bool silent = true;
+            do
             {
-                MessageBox.Show("Something went wrong while flashing", "Error");
-                return false;
+                ProcessStartInfo psi = new ProcessStartInfo("cmd.exe", (silent ? "/C" : "/K")  + string.Format(" {0} -p{1} -e -w -v --boot=1 --bod=0 --bor=0 \"{2}\"", Program.bossacPath.Replace(" ", "^ "), comPort, path));
+
+                psi.CreateNoWindow = false;
+                psi.WindowStyle = ProcessWindowStyle.Normal;
+
+                psi.UseShellExecute = false;
+                psi.WorkingDirectory = Path.GetDirectoryName(Program.bossacPath);
+
+                proc = new Process();
+                proc.StartInfo = psi;
+                proc.Start();
+                if (silent)
+                {
+                    proc.WaitForExit(60 * 4 * 1000);
+                    sw.Stop();
+                    if (sw.ElapsedMilliseconds < 2000)
+                    {
+                        silent = false;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
             }
+            while (true);
             return true;
         }
 
@@ -300,23 +339,31 @@ namespace PanelDueSplashMaker
                 if (list.Count <= 0)
                 {
                     ComPortPicker cpp = new ComPortPicker();
-                    cpp.ShowDialog();
-                    if (cpp.IsConfirmed)
+                    if (cpp.IsEmpty)
                     {
-                        comPort = cpp.ComPort;
-                        if (string.IsNullOrWhiteSpace(comPort) == false)
-                        {
-                            lblSerialPort.Text = comPort;
-                        }
-                        else
-                        {
-                            MessageBox.Show("No COM port selected", "Error");
-                            return false;
-                        }
+                        MessageBox.Show("No COM port available", "Error");
+                        return false;
                     }
                     else
                     {
-                        return false;
+                        cpp.ShowDialog();
+                        if (cpp.IsConfirmed)
+                        {
+                            comPort = cpp.ComPort;
+                            if (string.IsNullOrWhiteSpace(comPort) == false)
+                            {
+                                lblSerialPort.Text = comPort;
+                            }
+                            else
+                            {
+                                MessageBox.Show("No COM port selected", "Error");
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            return false;
+                        }
                     }
                 }
                 else
@@ -331,6 +378,9 @@ namespace PanelDueSplashMaker
         private bool MakeFinalBinary(string srcPath)
         {
             ProcessStartInfo psi = new ProcessStartInfo(Program.bmp2cPath, string.Format("\"{0}\" \"{1}\" -b -c", this.TemporaryBitmapPath, this.TemporaryLogoPath));
+            psi.UseShellExecute = true;
+            psi.WindowStyle = ProcessWindowStyle.Hidden;
+            psi.CreateNoWindow = true;
             proc = new Process();
             proc.StartInfo = psi;
             proc.Start();
@@ -491,6 +541,24 @@ namespace PanelDueSplashMaker
                     MessageBox.Show("Internal error: unable to find URL for dropdown item", "Error");
                     return;
                 }
+
+                if (drop.Contains("4.3"))
+                {
+                    if (resultImage.Width != 480)
+                    {
+                        MessageBox.Show("Wrong image size for hardware screen size", "Error");
+                        return;
+                    }
+                }
+                else
+                {
+                    if (resultImage.Width != 800)
+                    {
+                        MessageBox.Show("Wrong image size for hardware screen size", "Error");
+                        return;
+                    }
+                }
+
                 using (WebClient client = new WebClient())
                 {
                     client.DownloadFile(url, this.TemporaryDownloadPath);
